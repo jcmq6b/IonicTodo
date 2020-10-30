@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { Todo } from 'src/app/interfaces/todo/todo'
+import { DataService } from 'src/app/services/TodoData/data.service'
 
 @Component({
   selector: 'app-todo',
@@ -10,45 +11,40 @@ import { Todo } from 'src/app/interfaces/todo/todo'
 export class TodoPage implements OnInit {
 
   private todoForm: FormGroup;
+  todoArray: Todo[]= [];
 
-  todoArray = [];
-
-  constructor(private formBuilder: FormBuilder) {
+  constructor(private formBuilder: FormBuilder,
+    private todoModel: DataService,) 
+  {
     this.todoForm = this.formBuilder.group({
       todo: ["", Validators.required],
       done: false
     });
+
+    this.todoModel.getData("todos").then((todos)=>{
+      if(todos){
+        this.todoArray = todos;
+      }
+    });
   }
   ngOnInit() {
   }
-
-  addTodo(value) {
-    if (value !== "") {
-      let dataObject: Todo = {
-        todo: value,
-        done: false
-      };
-      this.todoArray.push(dataObject);
-    } else {
-      alert("Field required!");
-    }
-  }
-
-  deleteItem(todo) {
-    for (let i = 0; i < this.todoArray.length; i++) {
-      if (todo == this.todoArray[i]) {
-        this.todoArray.splice(i, 1);
-        console.log("delete item");
+  addTodo(){
+    if(this.todoForm.value.todo != ""){
+      console.log(this.todoForm.value);
+      let updatedModel = this.todoModel.addTodo(this.todoForm.value);
+      if(updatedModel != null){
+        this.todoArray = updatedModel;
+      }else{
+        alert("Error adding todo");
       }
+    }else{
+      alert("Todo field required!");
     }
   }
 
-  todoSubmit(value: Todo) {
-    if (value.todo !== "") {
-      this.todoArray.push(value);
-    } else {
-      alert("Field Required");
-    }
+  deleteItem(selectedTodo){
+    this.todoArray = this.todoModel.deleteItem(selectedTodo);
   }
 
 }
